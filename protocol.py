@@ -102,7 +102,7 @@ class Protocol:
     # The object which does the serial talking
     _ser = None
 
-    def __init__(self, serialDevice="/dev/ttyUSB0", versionsConfigDirectory = "/usr/local/share/heatpump/protocolVersions", newStyleSerialCommunication = True,  debug=True):
+    def __init__(self, serialDevice="/dev/ttyUSB0", versionsConfigDirectory = "/usr/local/share/heatpump/protocolVersions", newStyleSerialCommunication = True,  debug=False):
         self._serialDevice = serialDevice
         self._debug = debug
         self._newStyleSerialCommunication = newStyleSerialCommunication

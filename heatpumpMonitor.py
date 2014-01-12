@@ -64,7 +64,11 @@ def logError(e):
     print traceback.format_exc()
     print "========="
     sys.stdout.flush()
-    
+
+def updateCCU(v):
+	ccuUrl = "http://192.168.178.31:8080/api/set/"
+	requests.get(ccuUrl + "/AussenTemp/?value=" + str(v.get('outside_temp')))    
+	requests.get(ccuUrl + "/KollectorTemp/?value=" + str(v.get('collector_temp')))    
     
 def doMonitor():
     try:
@@ -101,9 +105,7 @@ def doMonitor():
             
             # store the stuff
             s.add(values)
-            requests.get("http://192.168.178.31:8080/api/set/AussenTemp/?value=" + str(values.get('outside_temp')))    
-            requests.get("http://192.168.178.31:8080/api/set/KollectorTemp/?value=" + str(values.get('collector_temp')))    
-       	    print values 	    
+            updateCCU(values)
             # write the json file everything, as it does not use much cpu
             j.write(values)
                         
