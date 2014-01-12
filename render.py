@@ -88,7 +88,19 @@ graphsDefinition = {"enduser_temperatures": {
                                             "type": "line"},                                      
                                     }
                         }, 
-                    "verbrauch": {
+                    
+										"umwelt": {
+                        "title": "Umwelt", 
+                        "verticalLabel": '"Grad C"', 
+                        "sources": {
+                                    "outside_temp":{
+                                            "title": "outside_temp", 
+                                            "color": "#FFA902",
+                                            "type": "line"
+																						}
+                    		}	                
+										},										
+										"verbrauch": {
                         "title": "Verbrauch", 
                         "verticalLabel": '"KW"', 
                         "sources": {
