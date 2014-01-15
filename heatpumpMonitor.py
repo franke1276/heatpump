@@ -66,7 +66,7 @@ def logError(e):
     sys.stdout.flush()
 
 def updateCCU(v):
-	ccuUrl = "http://192.168.178.31:8080/api/set/"
+	ccuUrl = "http://192.168.178.31:8080/api/set"
 	requests.get(ccuUrl + "/AussenTemp/?value=" + str(v.get('outside_temp')))    
 	requests.get(ccuUrl + "/KollectorTemp/?value=" + str(v.get('collector_temp')))    
     

@@ -78,10 +78,6 @@ graphsDefinition = {"enduser_temperatures": {
                                             "title": "DHW temperature", 
                                             "color": "#FF2802",
                                             "type": "line"},                                      
-                                    "outside_temp":{
-                                            "title": "outside temperature", 
-                                            "color": "#025AFF",
-                                            "type": "line"},                                      
                                     "collector_temp":{
                                             "title": "collector temperature", 
                                             "color": "#175C4F",
