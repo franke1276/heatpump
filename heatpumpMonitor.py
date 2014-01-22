@@ -90,6 +90,8 @@ def doMonitor():
         renderInterval = config.getRenderInterval()
         copyCommand = config.getCopyCommand()
         copyInterval = config.getCopyInterval()
+        verbrauchsInterval = 60 * 24
+        oldValue = {"compressor_heating": 0, "compressor_dhw": 0, "booster_dhw": 0, "booster_heating" : 0}
         while 1:
             startTime = time.time()
             try:
@@ -121,6 +123,16 @@ def doMonitor():
                 else:
                     c = threadedExec.ThreadedExec(copyCommand)
                     c.start()
+            
+            if counter % verbrauchsInterval == 0:
+                timeString = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                
+                print "{0} compressor_heating={1}, compressor_dhw={2}, booster_dhw={3}, booster_heating={4}".format(timeString, values["compressor_heating"] - oldValue["compressor_heating"], values["compressor_dhw"] - oldValue["compressor_dhw"], values["booster_heating"] - oldValue["booster_heating"], values["booster_dhw"] - oldValue["booster_dhw"])
+                sys.stdout.flush()
+                oldValue["compressor_heating"]=values["compressor_heating"]
+                oldValue["compressor_dhw"]=values["compressor_dhw"]
+                oldValue["booster_heating"]=values["booster_heating"]
+                oldValue["booster_dhw"]=values["booster_dhw"]
             counter += 1
             
             # at last check the values if something needs to reported

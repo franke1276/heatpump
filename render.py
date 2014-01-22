@@ -118,7 +118,8 @@ graphsDefinition = {"enduser_temperatures": {
                                     "booster_heating":{
                                             "title": "booster_heating", 
                                             "color": "#84FE19",
-                                            "type": "line"}
+                                            "type": "line"},
+																						
                     		}	                
                         }, 
                     "fans": {
@@ -163,6 +164,11 @@ graphsDefinition = {"enduser_temperatures": {
                                             "title": "dew point temperature", 
                                             "color": "#025AFF",
                                             "type": "line"}, 
+                                    "outside_temp":{
+                                            "title": "outside_temp", 
+                                            "color": "#FFA902",
+                                            "type": "line"
+																						}
                                     }
                         }
                     }
