@@ -36,6 +36,7 @@ import config_manager
 import report
 import thresholdMonitor
 import requests
+import stromzaehler
 
 config = None
 
@@ -92,10 +93,12 @@ def doMonitor():
         copyInterval = config.getCopyInterval()
         verbrauchsInterval = 60 * 24
         oldValue = {"compressor_heating": 0, "compressor_dhw": 0, "booster_dhw": 0, "booster_heating" : 0}
+        sz_wp = stromzaehler.StromZaehler("/dev/lesekopf0")
         while 1:
             startTime = time.time()
             try:
                 values = p.query()
+                values["zaehlerstand_wp"] = sz_wp.getValue()
             except Exception, e:
                 # log the error and just try it again in 120 sec - sometimes the heatpump returns an error and works
                 # seconds later again
@@ -110,7 +113,7 @@ def doMonitor():
             updateCCU(values)
             # write the json file everything, as it does not use much cpu
             j.write(values)
-                        
+            print "zaehlerstand_wp %f" % values["zaehlerstand_wp"]            
             # render it if the time is right ... it takes a lot of cpu on small embedded systems
             if counter % renderInterval == 0:
                 r.render()
