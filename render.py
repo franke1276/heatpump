@@ -89,9 +89,14 @@ graphsDefinition = {"enduser_temperatures": {
                         "title": "Umwelt", 
                         "verticalLabel": '"Grad C"', 
                         "sources": {
-                                    "outside_temp":{
-                                            "title": "outside_temp", 
+                                    "zaehlerstand_wp":{
+                                            "title": "Verbrauch WP", 
                                             "color": "#FFA902",
+                                            "type": "line"
+																						},
+                                    "zaehlerstand_sz":{
+                                            "title": "Verbrauch SZ", 
+                                            "color": "#FF2802",
                                             "type": "line"
 																						}
                     		}	                
@@ -213,7 +218,11 @@ class Render:
         for graphName, graphData in graphsDefinition.items():
             tmp = []
             for sourceName, sourceData in graphData["sources"].items():
-                tmp.append(DEF(rrdfile=self._filename, vname=sourceName, dsName=sourceName))
+                def1 = DEF(rrdfile=self._filename, vname=sourceName, dsName=sourceName)
+                tmp.append(def1)
+                if sourceName.startswith("zaehlerstand"):
+                  cdef1 = CDEF(vname='verbrauchpros-'+def1.vname, rpn='%s,86400,*' % def1.vname)
+                  tmp.append(cdef1) 
                 if sourceData["type"] == "line":
                     tmp.append(LINE(value=sourceName, color=sourceData["color"], legend=sourceData["title"]))
                 elif sourceData["type"] == "area":

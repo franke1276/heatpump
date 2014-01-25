@@ -45,7 +45,9 @@ dataSources = ( #1234567890123456789
                 "booster_dhw", 
                 "booster_heating", 
                 "collector_temp", 
-                "dew_point_temp"
+                "dew_point_temp",
+                "zaehlerstand_wp",
+                "zaehlerstand_sz"
             )
 
 
@@ -65,7 +67,10 @@ class Storage:
         # Let's setup some data sources for our RRD
         dss = []
         for source in dataSources:
-            dss.append(DS(dsName=source, dsType='GAUGE', heartbeat=900))
+            if source.startswith("zaehlerstand"):
+              dss.append(DS(dsName=source, dsType='COUNTER', heartbeat=900))
+            else:  
+              dss.append(DS(dsName=source, dsType='GAUGE', heartbeat=900))
 
         # An now let's setup how our RRD will archive the data
         rras = []
