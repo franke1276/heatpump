@@ -7,7 +7,8 @@ import sys
 import time
 
 class StromZaehler:
-  HEADER_BYTE="\x1b"
+  HEADER_BYTE1="\x1b"
+  HEADER_BYTE2="\x01"
  
   _ser = None
 
@@ -15,32 +16,36 @@ class StromZaehler:
     self._ser = serial.Serial(serialDevice, timeout=5, baudrate=9600)
     print "connection to StromZaehler via %s established" % (serialDevice)
 
-  def getValue(self):
+
+  def getValueAsInt(self):
     headerCounter=0
+    hb = self.HEADER_BYTE1
     while 1:
       r = self._ser.read(1)
-      print "%02x" % ord(r),
-      if r == self.HEADER_BYTE:
+      if r == hb:
         headerCounter += 1
       else:
-        print " |"
+        hb = self.HEADER_BYTE1
         headerCounter = 0
   
       if headerCounter == 4:
-        print "-header found"
+        hb = self.HEADER_BYTE2
+      
+      if headerCounter == 8:
         break
-    byteCountToRead=10*16-4
+        
+    byteCountToRead=10*16-8
     r = self._ser.read(byteCountToRead)
     if r[(byteCountToRead) - 7] != "\xff" or r[(byteCountToRead) - 6] != "\x56":
+      print "buffer: ",
+      for t in r: 
+        print "%02x" % ord(t),
       raise BaseException, "Wrong position in protocol"
     
     value = r[(byteCountToRead) - 5:]
-    for t in value:
-      print "%02x" %ord(t),
     v = 0
     for i in range(0,5):
       v += ord(value[i]) * pow(256,(4-i))
-    v = float(v) / 10000  
     return v
 
   def close(self):
@@ -49,7 +54,11 @@ class StromZaehler:
 
 def main():
   sz = StromZaehler("/dev/lesekopf0")
-  print "value: %f" % sz.getValue()
+  print "value: %d" % sz.getValueAsInt()
+  print "value: %d" % sz.getValueAsInt()
+  print "value: %d" % sz.getValueAsInt()
+  print "value: %d" % sz.getValueAsInt()
+  print "value: %d" % sz.getValueAsInt()
 
 if __name__ == '__main__':
   main()
