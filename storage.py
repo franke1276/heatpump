@@ -47,7 +47,8 @@ dataSources = ( #1234567890123456789
                 "collector_temp", 
                 "dew_point_temp",
                 "zaehlerstand_wp",
-                "zaehlerstand_sz"
+                "zaehlerstand_sz",
+                "heizung"
             )
 
 

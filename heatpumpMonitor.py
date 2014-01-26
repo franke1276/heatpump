@@ -115,8 +115,9 @@ def doMonitor():
             updateCCU(values)
             # write the json file everything, as it does not use much cpu
             j.write(values)
-            print "zaehlerstand_wp %f" % values["zaehlerstand_wp"]            
-            print "zaehlerstand_sz %f" % values["zaehlerstand_sz"]            
+            print "heizung: %02x" % values["heizung"]
+            print "%s zaehlerstand_wp %f" % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()), values["zaehlerstand_wp"])
+            print "%s zaehlerstand_sz %f" % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()), values["zaehlerstand_sz"])
             sys.stdout.flush()
             
             # render it if the time is right ... it takes a lot of cpu on small embedded systems

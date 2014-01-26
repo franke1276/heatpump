@@ -101,6 +101,18 @@ graphsDefinition = {"enduser_temperatures": {
 																						}
                     		}	                
 										},										
+										"heizung": {
+                        "title": "Heizung", 
+                        "verticalLabel": '"Stufe"', 
+                        "sources": {
+                                    "heizung":{
+                                            "title": "Heizstufe", 
+                                            "color": "#FFA902",
+                                            "type": "line"
+																						},
+                    		}	                
+										},										
+
 										"verbrauch": {
                         "title": "Verbrauch", 
                         "verticalLabel": '"KW"', 
