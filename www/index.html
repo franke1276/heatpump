@@ -9,7 +9,7 @@
 		<script type="text/javascript">
 
 	$(function() {
-		$( "#tabs,#tabs_big" ).tabs({
+		$( "#tabs_big,#tabs" ).tabs({
 			ajaxOptions: {
 				cache: false,
 				error: function( xhr, status, index, anchor ) {
@@ -26,21 +26,21 @@
 
 		$("input[name='radio']").change(function(){
 		  if ($("input[name='radio']:checked").val() == '1') {
-		    $('#tabs').show();
-		    $('#tabs_big').hide();
-		  }
-		  else{
 		    $('#tabs_big').show();
 		    $('#tabs').hide();
+		  }
+		  else{
+		    $('#tabs').show();
+		    $('#tabs_big').hide();
 		  }
 		});
 		if ($("input[name='radio']:checked").val() == '1') {
-		    $('#tabs').show();
-		    $('#tabs_big').hide();
-		}
-		else{
 		    $('#tabs_big').show();
 		    $('#tabs').hide();
+		}
+		else{
+		    $('#tabs').show();
+		    $('#tabs_big').hide();
 		}
 
 		$.ajax({
@@ -155,22 +155,10 @@
 
 <form class="btns">
 	<div id="radio">
-		<input type="radio" id="radio1" name="radio" checked="checked" value="1"/><label for="radio1">Small Graphs</label>
-		<input type="radio" id="radio2" name="radio" value="2"/><label for="radio2">Big Graphs</label>
+		<input type="radio" id="radio1" name="radio" checked="checked" value="1"/><label for="radio1">Big Graphs</label>
+		<input type="radio" id="radio2" name="radio" value="2"/><label for="radio2">Small Graphs</label>
 	</div>
 </form>
-
-<div id="tabs">
-	  <div class="title">Small Graphs</div>
-	  <ul>
-		  <li><a href="index_3hours_small.html">3 hours</a></li>
-		  <li><a href="index_halfday_small.html">halfday</a></li>
-		  <li><a href="index_day_small.html">day</a></li>
-		  <li><a href="index_week_small.html">week</a></li>
-		  <li><a href="index_month_small.html">month</a></li>
-		  <li><a href="index_year_small.html">year</a></li>
-	  </ul>
-</div>
 
 <div id="tabs_big">
 	  <div class="title">Big Graphs</div>
@@ -181,6 +169,17 @@
 		  <li><A href="index_week_big.html">week</A></li>
 		  <li><A href="index_month_big.html">month</A></li>
 		  <li><A href="index_year_big.html">year</A></li>
+	  </ul>
+</div>
+<div id="tabs">
+	  <div class="title">Small Graphs</div>
+	  <ul>
+		  <li><a href="index_3hours_small.html">3 hours</a></li>
+		  <li><a href="index_halfday_small.html">halfday</a></li>
+		  <li><a href="index_day_small.html">day</a></li>
+		  <li><a href="index_week_small.html">week</a></li>
+		  <li><a href="index_month_small.html">month</a></li>
+		  <li><a href="index_year_small.html">year</a></li>
 	  </ul>
 </div>
 
