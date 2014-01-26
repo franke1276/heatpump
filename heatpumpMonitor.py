@@ -70,7 +70,15 @@ def updateCCU(v):
 	ccuUrl = "http://192.168.178.31:8080/api/set"
 	requests.get(ccuUrl + "/AussenTemp/?value=" + str(v.get('outside_temp')))    
 	requests.get(ccuUrl + "/KollectorTemp/?value=" + str(v.get('collector_temp')))    
-    
+   
+def saveVerbrauchsData(v_wp,v_sz,zs_wp,zs_sz,interval):
+  y = time.strftime('%Y', time.localtime())
+  m = time.strftime('%m', time.localtime())
+  d = time.strftime('%d', time.localtime())
+  f = open("/var/lib/heatpumpMonitor/verbrauch.%s-%s-%s" %(y,m,d) , 'a')
+  f.write("%s %04d %04d %d %d %d\n" % (time.strftime('%Y-%m-%d %a %H:%M:%S', time.localtime()), v_wp, v_sz, zs_wp, zs_sz), interval)
+  f.close
+
 def doMonitor():
     try:
         print "Starting ..."
@@ -95,6 +103,11 @@ def doMonitor():
         oldValue = {"compressor_heating": 0, "compressor_dhw": 0, "booster_dhw": 0, "booster_heating" : 0}
         sz_wp = stromzaehler.StromZaehler("/dev/lesekopfWP")
         sz_sz = stromzaehler.StromZaehler("/dev/lesekopfSZ")
+        scheduleInterval = 3600
+        nextSchedule = int(time.time()) + scheduleInterval 
+        oldwp = sz_wp.getValueAsInt()
+        oldsz = sz_sz.getValueAsInt() 
+        values = {}
         while 1:
             startTime = time.time()
             try:
@@ -115,11 +128,19 @@ def doMonitor():
             updateCCU(values)
             # write the json file everything, as it does not use much cpu
             j.write(values)
-            print "heizung: %02x" % values["heizung"]
-            print "%s zaehlerstand_wp %f" % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()), values["zaehlerstand_wp"])
-            print "%s zaehlerstand_sz %f" % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()), values["zaehlerstand_sz"])
             sys.stdout.flush()
             
+            if int(time.time()) > nextSchedule:
+              timeString = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+              verbrauchwp = values["zaehlerstand_wp"] - oldwp
+              verbrauchsz = values["zaehlerstand_sz"] - oldsz
+              oldwp = values["zaehlerstand_wp"]
+              oldsz = values["zaehlerstand_sz"]
+              saveVerbrauchsData(verbrauchwp, verbrauchsz, values["zaehlerstand_wp"], values["zaehlerstand_sz"],scheduleInterval)
+              nextSchedule += scheduleInterval
+              sys.stdout.flush()
+            
+
             # render it if the time is right ... it takes a lot of cpu on small embedded systems
             if counter % renderInterval == 0:
                 r.render()
@@ -133,15 +154,6 @@ def doMonitor():
                     c = threadedExec.ThreadedExec(copyCommand)
                     c.start()
             
-            if counter % verbrauchsInterval == 0:
-                timeString = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-                
-                print "{0} compressor_heating={1}, compressor_dhw={2}, booster_dhw={3}, booster_heating={4}".format(timeString, values["compressor_heating"] - oldValue["compressor_heating"], values["compressor_dhw"] - oldValue["compressor_dhw"], values["booster_heating"] - oldValue["booster_heating"], values["booster_dhw"] - oldValue["booster_dhw"])
-                sys.stdout.flush()
-                oldValue["compressor_heating"]=values["compressor_heating"]
-                oldValue["compressor_dhw"]=values["compressor_dhw"]
-                oldValue["booster_heating"]=values["booster_heating"]
-                oldValue["booster_dhw"]=values["booster_dhw"]
             counter += 1
             
             # at last check the values if something needs to reported

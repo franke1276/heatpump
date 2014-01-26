@@ -18,6 +18,7 @@
 
 import time
 import os
+import sys
 
 from pyrrd.rrd import RRD, RRA, DS
 from pyrrd.graph import DEF, CDEF, VDEF
@@ -82,12 +83,18 @@ graphsDefinition = {"enduser_temperatures": {
                                             "title": "collector temperature", 
                                             "color": "#175C4F",
                                             "type": "line"},                                      
-                                    }
+                                    "outside_temp":{
+                                            "title": "outside_temp", 
+                                            "color": "#025AFF",
+                                            "type": "line"
+																						}
+                                    },
                         }, 
                     
 										"umwelt": {
                         "title": "Umwelt", 
-                        "verticalLabel": '"Grad C"', 
+                        "logarithmic" : True,
+                        "verticalLabel": '"Verbrauch pro Tag"', 
                         "sources": {
                                     "zaehlerstand_wp":{
                                             "title": "Verbrauch WP", 
@@ -180,12 +187,7 @@ graphsDefinition = {"enduser_temperatures": {
                                     "dew_point_temp":{
                                             "title": "dew point temperature", 
                                             "color": "#025AFF",
-                                            "type": "line"}, 
-                                    "outside_temp":{
-                                            "title": "outside_temp", 
-                                            "color": "#FFA902",
-                                            "type": "line"
-																						}
+                                            "type": "line"} 
                                     }
                         }
                     }
@@ -246,6 +248,8 @@ class Render:
             g.title = '"%s"' % graphData["title"]
             # create a new variable
             g.filenameBase = graphName
+            if graphData.get("logarithmic"):
+              g.logarithmic=True  
             result.append(g)
         return result
 
@@ -272,6 +276,7 @@ class Render:
                 g.width = 800
                 g.height = 400
                 g.write()
+                sys.stdout.flush()
 
 
 
