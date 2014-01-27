@@ -14,7 +14,7 @@
     This is the main module for the heatpump Monitor. It forks into the background
     and should to a polling every 60 secs. It is quit simple at this point, no
     config files or almost no error handling.
-    
+
     Written by Robert Penz <robert@penz.name>
 """
 
@@ -56,9 +56,9 @@ def logError(e):
 
 def updateCCU(v):
 	ccuUrl = "http://192.168.178.31:8080/api/set"
-	requests.get(ccuUrl + "/AussenTemp/?value=" + str(v.get('outside_temp')))    
-	requests.get(ccuUrl + "/KollectorTemp/?value=" + str(v.get('collector_temp')))    
-   
+	requests.get(ccuUrl + "/AussenTemp/?value=" + str(v.get('outside_temp')))
+	requests.get(ccuUrl + "/KollectorTemp/?value=" + str(v.get('collector_temp')))
+
 def saveVerbrauchsData(v_wp,v_sz,zs_wp,zs_sz,interval):
   y = time.strftime('%Y', time.localtime())
   m = time.strftime('%m', time.localtime())
@@ -71,7 +71,7 @@ def doMonitor():
     try:
         print "Starting ..."
         sys.stdout.flush()
-        
+
         p = protocol.Protocol(config.getSerialDevice(), config.getProtocolVersionsDirectory(), config.getNewStyleSerialCommunication())
         s = storage.Storage(config.getDatabaseFile())
         j = json.Json(os.path.join(config.getRenderOutputPath(), "actual_values.json"))
@@ -79,10 +79,10 @@ def doMonitor():
         c = None # ThreadedExec for copyCommand
         aReport = report.Report(config)
         t = thresholdMonitor.ThresholdMonitor(config, aReport)
-        
+
         print "Up and running"
         sys.stdout.flush()
-        
+
         counter = 0
         renderInterval = config.getRenderInterval()
         copyCommand = config.getCopyCommand()
@@ -90,9 +90,9 @@ def doMonitor():
         sz_wp = stromzaehler.StromZaehler("/dev/lesekopfWP")
         #sz_sz = stromzaehler.StromZaehler("/dev/lesekopfSZ")
         scheduleInterval = 3600
-        nextSchedule = int(time.time()) + scheduleInterval 
+        nextSchedule = int(time.time()) + scheduleInterval
         oldwp = sz_wp.getValueAsInt()
-        #oldsz = sz_sz.getValueAsInt() 
+        #oldsz = sz_sz.getValueAsInt()
         saveVerbrauchsData(0, 0, oldwp, 0, scheduleInterval)
         values = {}
         while 1:
@@ -109,29 +109,29 @@ def doMonitor():
                 t.gotQueryError()
                 time.sleep(120 - (time.time() - startTime))
                 continue
-            
+
             # store the stuff
             s.add(values)
             updateCCU(values)
             # write the json file everything, as it does not use much cpu
             j.write(values)
             sys.stdout.flush()
-            
+
             if int(time.time()) > nextSchedule:
               timeString = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
               verbrauchwp = values["zaehlerstand_wp"] - oldwp
             #  verbrauchsz = values["zaehlerstand_sz"] - oldsz
               oldwp = values["zaehlerstand_wp"]
             #  oldsz = values["zaehlerstand_sz"]
-              saveVerbrauchsData(verbrauchwp, verbrauchsz, values["zaehlerstand_wp"], 0,scheduleInterval)
+              saveVerbrauchsData(verbrauchwp, 0, values["zaehlerstand_wp"], 0, scheduleInterval)
               nextSchedule += scheduleInterval
               sys.stdout.flush()
-            
+
 
             # render it if the time is right ... it takes a lot of cpu on small embedded systems
             if counter % renderInterval == 0:
                 r.render()
-            
+
             # upload it somewhere if it fits the time
             if copyCommand and counter % copyInterval == 0:
                 if c and c.isAlive():
@@ -140,12 +140,12 @@ def doMonitor():
                 else:
                     c = threadedExec.ThreadedExec(copyCommand)
                     c.start()
-            
+
             counter += 1
-            
+
             # at last check the values if something needs to reported
             t.check(values)
-            
+
             # lets make sure it is aways 60 secs interval, no matter how long the last run took
             sleepTime = 61 - (time.time() - startTime)
             if sleepTime < 0:
@@ -162,6 +162,6 @@ def main():
     config = config_manager.ConfigManager()
     deamon.startstop(config.getLogFile(), pidfile=config.getPidFile())
     doMonitor()
-    
+
 if __name__ == '__main__':
     main()
