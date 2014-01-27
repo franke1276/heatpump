@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>heatpumpMonitor</title>
+		<link type="text/css" href="css/south-street/jquery-ui-1.8.18.custom.css" rel="stylesheet" />	
+		<script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+		<script type="text/javascript">
+
+
+    $( document ).ready( function(){
+		 alert("ready")
+     
+     $.ajax({
+		    url: "verbrauch.json",
+		    dataType: 'json',
+		    cache: false,
+		    success: function(data){
+          alert("data")
+		      $.each(data, function(key, val) {
+		        $('#h_'+key).html(val.stunde);
+		      });
+		    }
+		  });
+
+    });
+		</script>
+		<style type="text/css">
+		
+    </style>
+	</head>
+	<body>
+    <div class="content">
+      <div id="h_0"></div>
+      <div id="h_1"></div>
+      <div id="h_2"></div>
+      <div id="h_3"></div>
+      <div id="h_4"></div>
+      <div id="h_5"></div>
+      <div id="h_6"></div>
+      <div id="h_7"></div>
+      <div id="h_8"></div>
+      <div id="h_9"></div>
+      <div id="h_10"></div>
+      <div id="h_11"></div>
+      <div id="h_12"></div>
+      <div id="h_14"></div>
+      <div id="h_15"></div>
+      <div id="h_16"></div>
+      <div id="h_17"></div>
+      <div id="h_18"></div>
+      <div id="h_19"></div>
+      <div id="h_20"></div>
+      <div id="h_21"></div>
+      <div id="h_22"></div>
+      <div id="h_23"></div>
+
+    </div>
+	</body>
+</html>

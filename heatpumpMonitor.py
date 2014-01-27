@@ -25,6 +25,7 @@ import time
 import sys
 import traceback
 import os
+import signal
 
 import protocol
 import storage
@@ -37,6 +38,8 @@ import report
 import thresholdMonitor
 import requests
 import stromzaehler
+import errorlog
+
 
 config = None
 
@@ -49,22 +52,7 @@ def usage(*args):
     sys.exit(2)
 
 def logError(e):
-    """ prints a string which a human readable error text """
-    print "========= % s =========" % time.asctime()
-    
-    # args can be empty
-    if e.args:
-        if len(e.args) > 1:
-            print str(e.args)
-        else:
-            print e.args[0]
-    else:
-        # print exception class name
-        print str(e.__class__)
-    print "---------"
-    print traceback.format_exc()
-    print "========="
-    sys.stdout.flush()
+    errorlog.logError(e)
 
 def updateCCU(v):
 	ccuUrl = "http://192.168.178.31:8080/api/set"
@@ -76,7 +64,7 @@ def saveVerbrauchsData(v_wp,v_sz,zs_wp,zs_sz,interval):
   m = time.strftime('%m', time.localtime())
   d = time.strftime('%d', time.localtime())
   f = open("/var/lib/heatpumpMonitor/verbrauch.%s-%s-%s" %(y,m,d) , 'a')
-  f.write("%s %04d %04d %d %d %d\n" % (time.strftime('%Y-%m-%d %a %H:%M:%S', time.localtime()), v_wp, v_sz, zs_wp, zs_sz), interval)
+  f.write("%s %04d %04d %d %d %d\n" % (time.strftime('%Y %m %d %a %H %H:%M:%S', time.localtime()), v_wp, v_sz, zs_wp, zs_sz, interval))
   f.close
 
 def doMonitor():
@@ -99,21 +87,20 @@ def doMonitor():
         renderInterval = config.getRenderInterval()
         copyCommand = config.getCopyCommand()
         copyInterval = config.getCopyInterval()
-        verbrauchsInterval = 60 * 24
-        oldValue = {"compressor_heating": 0, "compressor_dhw": 0, "booster_dhw": 0, "booster_heating" : 0}
         sz_wp = stromzaehler.StromZaehler("/dev/lesekopfWP")
-        sz_sz = stromzaehler.StromZaehler("/dev/lesekopfSZ")
+        #sz_sz = stromzaehler.StromZaehler("/dev/lesekopfSZ")
         scheduleInterval = 3600
         nextSchedule = int(time.time()) + scheduleInterval 
         oldwp = sz_wp.getValueAsInt()
-        oldsz = sz_sz.getValueAsInt() 
+        #oldsz = sz_sz.getValueAsInt() 
+        saveVerbrauchsData(0, 0, oldwp, 0, scheduleInterval)
         values = {}
         while 1:
             startTime = time.time()
             try:
                 values = p.query()
                 values["zaehlerstand_wp"] = sz_wp.getValueAsInt()
-                values["zaehlerstand_sz"] = sz_sz.getValueAsInt()
+                values["zaehlerstand_sz"] = 0 #sz_sz.getValueAsInt()
             except Exception, e:
                 # log the error and just try it again in 120 sec - sometimes the heatpump returns an error and works
                 # seconds later again
@@ -133,10 +120,10 @@ def doMonitor():
             if int(time.time()) > nextSchedule:
               timeString = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
               verbrauchwp = values["zaehlerstand_wp"] - oldwp
-              verbrauchsz = values["zaehlerstand_sz"] - oldsz
+            #  verbrauchsz = values["zaehlerstand_sz"] - oldsz
               oldwp = values["zaehlerstand_wp"]
-              oldsz = values["zaehlerstand_sz"]
-              saveVerbrauchsData(verbrauchwp, verbrauchsz, values["zaehlerstand_wp"], values["zaehlerstand_sz"],scheduleInterval)
+            #  oldsz = values["zaehlerstand_sz"]
+              saveVerbrauchsData(verbrauchwp, verbrauchsz, values["zaehlerstand_wp"], 0,scheduleInterval)
               nextSchedule += scheduleInterval
               sys.stdout.flush()
             
