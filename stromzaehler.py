@@ -21,7 +21,6 @@ class StromZaehler:
 
   def _connect(self):
     self._ser = serial.Serial(self._serialDevice, timeout=5, baudrate=9600)
-    print "connection to StromZaehler via %s established" % (self._serialDevice)
 
   def _readUntilHeader(self):
     headerCounter=0
@@ -44,25 +43,23 @@ class StromZaehler:
 
 
   def getValueAsInt(self):
-    if self._ser == None:
-      self._connect()
-
     try:
+      self._connect()
       r = self._readUntilHeader()
       value = r[(self.byteCountToRead) - 5:]
       v = 0
       for i in range(0,5):
         v += ord(value[i]) * pow(256,(4-i))
+      self.close()
       return v
     except Exception, e:
       errorlog.logError(e)
-      self._ser.close()
-      self._ser = None
+      self.close()
 
 
   def close(self):
-    print "connection to %s closed" % self._serialDevice
     self._ser.close()
+    self._ser = None
 
 
 def main():
