@@ -87,19 +87,19 @@ def doMonitor():
         renderInterval = config.getRenderInterval()
         copyCommand = config.getCopyCommand()
         copyInterval = config.getCopyInterval()
-        sz_wp = stromzaehler.StromZaehler("/dev/lesekopfWP")
+        #sz_wp = stromzaehler.StromZaehler("/dev/lesekopfWP")
         #sz_sz = stromzaehler.StromZaehler("/dev/lesekopfSZ")
-        scheduleInterval = 3600
-        nextSchedule = int(time.time()) + scheduleInterval
-        oldwp = sz_wp.getValueAsInt()
-        #oldsz = sz_sz.getValueAsInt()
-        saveVerbrauchsData(0, 0, oldwp, 0, scheduleInterval)
+        #scheduleInterval = 3600
+        #nextSchedule = int(time.time()) + scheduleInterval
+        #oldwp = 0 #sz_wp.getValueAsInt()
+        #oldsz = 0 #sz_sz.getValueAsInt()
+        #sz_wpsaveVerbrauchsData(0, 0, oldwp, oldsz, scheduleInterval)
         values = {}
         while 1:
             startTime = time.time()
             try:
                 values = p.query()
-                values["zaehlerstand_wp"] = sz_wp.getValueAsInt()
+                values["zaehlerstand_wp"] = 0 #sz_wp.getValueAsInt()
                 values["zaehlerstand_sz"] = 0 #sz_sz.getValueAsInt()
             except Exception, e:
                 # log the error and just try it again in 120 sec - sometimes the heatpump returns an error and works
@@ -111,21 +111,22 @@ def doMonitor():
                 continue
 
             # store the stuff
+
             s.add(values)
             updateCCU(values)
             # write the json file everything, as it does not use much cpu
             j.write(values)
             sys.stdout.flush()
 
-            if int(time.time()) > nextSchedule:
-              timeString = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-              verbrauchwp = values["zaehlerstand_wp"] - oldwp
+            #if int(time.time()) > nextSchedule:
+            #  timeString = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+            #  verbrauchwp = values["zaehlerstand_wp"] - oldwp
             #  verbrauchsz = values["zaehlerstand_sz"] - oldsz
-              oldwp = values["zaehlerstand_wp"]
+            #  oldwp = values["zaehlerstand_wp"]
             #  oldsz = values["zaehlerstand_sz"]
-              saveVerbrauchsData(verbrauchwp, 0, values["zaehlerstand_wp"], 0, scheduleInterval)
-              nextSchedule += scheduleInterval
-              sys.stdout.flush()
+            #  saveVerbrauchsData(verbrauchwp, verbrauchsz, values["zaehlerstand_wp"], values["zaehlerstand_sz"], scheduleInterval)
+            #  nextSchedule += scheduleInterval
+            #  sys.stdout.flush()
 
 
             # render it if the time is right ... it takes a lot of cpu on small embedded systems
