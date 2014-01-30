@@ -1,18 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import time
 import os
 import stromzaehler
 from pyrrd.rrd import DataSource, RRA, RRD
 from pyrrd.graph import DEF, CDEF, VDEF, LINE, AREA, GPRINT
 from pyrrd.graph import ColorAttributes
-
+import deamon
 import threading
 import signal
 import sys
 
+filename = '/var/lib/stromverbrauch/strom.rrd'
+
+def saveVerbrauchsData(v_wp,v_sz,zs_wp,zs_sz,interval):
+  y = time.strftime('%Y', time.localtime())
+  m = time.strftime('%m', time.localtime())
+  d = time.strftime('%d', time.localtime())
+  f = open("/var/lib/stromverbrauch/verbrauch.%s-%s-%s" %(y,m,d) , 'a')
+  f.write("%s %04d %04d %d %d %d\n" % (time.strftime('%Y %m %d %a %H %H:%M:%S', time.localtime()), v_wp, v_sz, zs_wp,   zs_sz, interval))
+  f.close
+
+
 def renderCharts(myRRD, startTime):
-  print "start generating charts ..."
-  def1 = DEF(rrdfile='/tmp/test.rrd', vname='zaehlerstandWP', dsName='zaehlerstandWP')
-  def2 = DEF(rrdfile='/tmp/test.rrd', vname='zaehlerstandSZ', dsName='zaehlerstandSZ')
+  print "start generating charts from %s ..." % filename
+  def1 = DEF(rrdfile=filename, vname='zaehlerstandWP', dsName='zaehlerstandWP')
+  def2 = DEF(rrdfile=filename, vname='zaehlerstandSZ', dsName='zaehlerstandSZ')
 
   line1 = LINE(value='zaehlerstandWP', color='#006600', legend='ZaehlerstandWP')
   line2 = LINE(value='zaehlerstandSZ', color='#ff6600', legend='ZaehlerstandSZ')
@@ -30,7 +44,7 @@ def renderCharts(myRRD, startTime):
 
 
   from pyrrd.graph import Graph
-  graphfile = "www/graphs/rrdgraph.png"
+  graphfile = "/home/pi/heatpump/www/graphs/rrdgraph.png"
   currentTime = int(time.time())
 
   g = Graph(graphfile, start=currentTime - 60 * 60 * 4 , end=currentTime, vertical_label='KWh/min', color=ca)
@@ -40,23 +54,23 @@ def renderCharts(myRRD, startTime):
   g.height = 400
   g.write()
   g.logarithmic=True
-  g.filename = "www/graphs/rrdgraph-log.png"
+  g.filename = "/home/pi/heatpump/www/graphs/rrdgraph-log.png"
   g.write()
 
   print "done generating charts."
 
-def main():
+def doMonitor():
   globalStartTime = int(time.time())
   print "start %d" % globalStartTime
+  sys.stdout.flush()
 
   try:
-    filename = '/var/lib/stromverbrauch/strom.rrd'
 
     if os.path.isfile(filename):
-      print "use existing rrd file"
+      print "use existing rrd file %s" % filename
       myRRD = RRD(filename)
     else:
-      print "create new rrd file"
+      print "create new rrd file %s" % filename
       dataSources = []
       roundRobinArchives = []
       ds1 = DataSource(dsName='zaehlerstandWP', dsType='GAUGE', heartbeat=600)
@@ -76,6 +90,7 @@ def main():
     oldSZ = sz2.getValueAsInt()
 
     timeSlot = 60
+    sys.stdout.flush()
     time.sleep(timeSlot)
     counter = 0
     while 1:
@@ -87,6 +102,7 @@ def main():
       oldSZ = currentValueSZ
       print "got verbrauch %d %d %d %d" % (v[0], v[1], currentValueWP, currentValueSZ)
       myRRD.bufferValue(int(time.time()), *v)
+      saveVerbrauchsData(v[0], v[1], currentValueWP, currentValueSZ, timeSlot)
 
       myRRD.update()
 
@@ -95,12 +111,17 @@ def main():
 
       counter += 1
       sleepTime = (timeSlot + 1) - (time.time() - startTime)
+      sys.stdout.flush()
       if sleepTime < 0:
         print "System is too slow for 60 sec interval by %d seconds" % abs(int(sleepTime))
       else:
         time.sleep(sleepTime)
   except KeyboardInterrupt:
     print "Bye."
+
+def main():
+  deamon.startstop("/var/log/stromverbrauch/stromverbrauch.log", pidfile="/var/run/stromverbrauch/stromverbrauch.pid")
+  doMonitor()
 
 if __name__ == '__main__':
     main()
