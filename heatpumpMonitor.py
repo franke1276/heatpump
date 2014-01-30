@@ -55,9 +55,12 @@ def logError(e):
     errorlog.logError(e)
 
 def updateCCU(v):
-	ccuUrl = "http://192.168.178.31:8080/api/set"
-	requests.get(ccuUrl + "/AussenTemp/?value=" + str(v.get('outside_temp')))
-	requests.get(ccuUrl + "/KollectorTemp/?value=" + str(v.get('collector_temp')))
+  ccuUrl = "http://192.168.178.31:8080/api/set"
+  try:
+    requests.get(ccuUrl + "/AussenTemp/?value=" + str(v.get('outside_temp')))
+    requests.get(ccuUrl + "/KollectorTemp/?value=" + str(v.get('collector_temp')))
+  except Exception,e:
+    logError(e)
 
 def saveVerbrauchsData(v_wp,v_sz,zs_wp,zs_sz,interval):
   y = time.strftime('%Y', time.localtime())

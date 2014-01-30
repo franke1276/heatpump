@@ -48,9 +48,9 @@ def renderCharts(myRRD, startTime):
 def main():
   globalStartTime = int(time.time())
   print "start %d" % globalStartTime
-  
+
   try:
-    filename = '/tmp/test.rrd'
+    filename = '/var/lib/stromverbrauch/strom.rrd'
 
     if os.path.isfile(filename):
       print "use existing rrd file"
@@ -76,7 +76,7 @@ def main():
     oldSZ = sz2.getValueAsInt()
 
     timeSlot = 60
-    time.sleep(timeSlot) 
+    time.sleep(timeSlot)
     counter = 0
     while 1:
       startTime = time.time()
@@ -88,12 +88,12 @@ def main():
       print "got verbrauch %d %d %d %d" % (v[0], v[1], currentValueWP, currentValueSZ)
       myRRD.bufferValue(int(time.time()), *v)
 
-      myRRD.update()  
+      myRRD.update()
 
       if counter % 2 == 0:
         renderCharts(myRRD, globalStartTime)
 
-      counter += 1  
+      counter += 1
       sleepTime = (timeSlot + 1) - (time.time() - startTime)
       if sleepTime < 0:
         print "System is too slow for 60 sec interval by %d seconds" % abs(int(sleepTime))
