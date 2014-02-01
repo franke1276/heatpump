@@ -79,7 +79,7 @@ def doMonitor():
       dataSources.append(ds1)
       dataSources.append(ds2)
       roundRobinArchives.append(RRA(cf='AVERAGE', xff=0, steps=1, rows=60/1 * 24))
-      myRRD = RRD( filename, ds=dataSources, rra=roundRobinArchives, start=globalStartTime, step=1)
+      myRRD = RRD( filename, ds=dataSources, rra=roundRobinArchives, start=globalStartTime, step=60)
       myRRD.create()
 
     time.sleep(1)
