@@ -47,7 +47,7 @@ def renderCharts(myRRD, startTime):
   graphfile = "/home/pi/heatpump/www/graphs/rrdgraph.png"
   currentTime = int(time.time())
 
-  g = Graph(graphfile, start=currentTime - 60 * 60 * 4 , end=currentTime, vertical_label='KWh/min', color=ca)
+  g = Graph(graphfile, start=currentTime - 60 * 60 * 24 , end=currentTime, vertical_label='KWh/min', color=ca)
   g.step = 60
   g.data.extend([def1, def2, line1, line2])
   g.width = 800
