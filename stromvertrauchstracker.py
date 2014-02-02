@@ -14,6 +14,43 @@ import sys
 
 filename = '/var/lib/stromverbrauch/strom.rrd'
 
+hour = 60 * 60
+day = 24 * hour
+week = 7 * day
+month = day * 30
+quarter = month * 3
+half = 365 * day / 2
+year = 365 * day
+
+times = {
+    "3hours": {
+        "time": 3*hour,
+        "step": 60 #seconds
+    },
+    "halfday": {
+        "time": 12*hour,
+        "step": 60 #seconds
+    },
+    "day": {
+        "time": day,
+        "step": 60 #seconds
+    },
+    "week": {
+        "time": 7*day,
+        "step": 300 # 5 minutes
+    },
+    "month": {
+        "time": 30*day,
+        "step": hour # 1 hour
+    },
+    "year": {
+        "time": 365*day,
+        "step": 12*hour # 1 hour
+    }
+}
+
+
+
 def saveVerbrauchsData(v_wp,v_sz,zs_wp,zs_sz,interval):
   y = time.strftime('%Y', time.localtime())
   m = time.strftime('%m', time.localtime())
@@ -47,15 +84,18 @@ def renderCharts(myRRD, startTime):
   graphfile = "/home/pi/heatpump/www/graphs/rrdgraph.png"
   currentTime = int(time.time())
 
-  g = Graph(graphfile, start=currentTime - 60 * 60 * 24 , end=currentTime, vertical_label='KWh/min', color=ca)
+  g = Graph('Dummy.png', start=currentTime - 60 * 60 * 24 , end=currentTime, vertical_label='KWh/min', color=ca)
   g.step = 60
   g.data.extend([def1, def2, line1, line2])
   g.width = 800
   g.height = 400
-  g.write()
-  g.logarithmic=True
-  g.filename = "/home/pi/heatpump/www/graphs/rrdgraph-log.png"
-  g.write()
+
+  for timeName, timeData in times.items():
+    g.filename="/home/pi/heatpump/www/graphs/rrdgraph_%s.png" % timeName
+    g.start =  currentTime - timeData["time"]
+    g.end = currentTime
+    g.step  = timeData["step"]
+    g.write()
 
   print "done generating charts."
 
@@ -72,14 +112,24 @@ def doMonitor():
     else:
       print "create new rrd file %s" % filename
       dataSources = []
-      roundRobinArchives = []
       ds1 = DataSource(dsName='zaehlerstandWP', dsType='GAUGE', heartbeat=600)
       ds2 = DataSource(dsName='zaehlerstandSZ', dsType='GAUGE', heartbeat=600)
 
       dataSources.append(ds1)
       dataSources.append(ds2)
-      roundRobinArchives.append(RRA(cf='AVERAGE', xff=0, steps=1, rows=60/1 * 24))
-      myRRD = RRD( filename, ds=dataSources, rra=roundRobinArchives, start=globalStartTime, step=60)
+
+      rras = []
+      # 1 days-worth of one-minute samples --> 60/1 * 24
+      rra1 = RRA(cf='AVERAGE', xff=0, steps=1, rows=1440)
+      # 7 days-worth of five-minute samples --> 60/5 * 24 * 7
+      rra2 = RRA(cf='AVERAGE', xff=0, steps=5, rows=2016)
+      # 30 days-worth of one hour samples --> 60/60 * 24 * 30
+      rra3 = RRA(cf='AVERAGE', xff=0, steps=60, rows=720)
+      # 1 year-worth of half day samples --> 60/60 * 24/12 * 365
+      rra4 = RRA(cf='AVERAGE', xff=0, steps=720, rows=730)
+      rras.extend([rra1, rra2, rra3, rra4])
+
+      myRRD = RRD( filename, ds=dataSources, rra=rras, start=globalStartTime, step=60)
       myRRD.create()
 
     time.sleep(1)
