@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from string import join
 
 rrd_file = "/var/lib/stromverbrauch/strom.rrd"
 
@@ -41,21 +42,35 @@ def getIntOrElse(params, key, default):
     return int(value[0])
   return default
 
+def getStringOrElse(params, key, default):
+  value = params.get(key)
+  if value:
+    return str(value[0])
+  return default
+
 def getBooleanOrElse(params, key, default):
   value = params.get(key)
   if value:
     return str(value[0]).lower() == "true"
   return default
 
+def getAllZaehlerNames():
+  z = []
+  for zaehlerName, zaehlerData in zaehler.items():
+    z.append(zaehlerName)
+  return join(z, ",")
 
 class GetHandler(BaseHTTPRequestHandler):
 
-  def _createLines(self):
+
+  def _createLines(self, graphs):
     lines = []
     for zaehlerName, zaehlerData in zaehler.items():
-      d = DEF(rrdfile=rrd_file, vname=zaehlerName, dsName=zaehlerName)
-      line = LINE(value=zaehlerName, color=zaehlerData["color"], legend=zaehlerData["legend"])
-      lines.extend([d, line])
+      for g in graphs.split(","):
+        if zaehlerName == g:
+          d = DEF(rrdfile=rrd_file, vname=zaehlerName, dsName=zaehlerName)
+          line = LINE(value=zaehlerName, color=zaehlerData["color"], legend=zaehlerData["legend"])
+          lines.extend([d, line])
     return lines
 
   def _render(self, params):
@@ -78,11 +93,12 @@ class GetHandler(BaseHTTPRequestHandler):
     step = getIntOrElse(params, "step", 60)
     width = getIntOrElse(params, "width", 800)
     height = getIntOrElse(params, "height", 400)
+    graphs = getStringOrElse(params, "graphs", getAllZaehlerNames())
 
     generated_file = "/tmp/%d-%d.png" % (time.time(),random.randint(0, 100000))
 
     g = Graph(generated_file, start=start, end=end, vertical_label='100mWh/min', color=ca)
-    g.data.extend(self._createLines())
+    g.data.extend(self._createLines(graphs))
     g.width = width
     g.height = height
     g.step = step
@@ -96,7 +112,11 @@ class GetHandler(BaseHTTPRequestHandler):
     self.end_headers()
 
   def _handle_index(self, parsed_path):
+    params = parse_qs(parsed_path.query)
     self.send_response(200)
+    graphs = getStringOrElse(params,"graphs", getAllZaehlerNames())
+
+    graphsParamStr = "&graphs=%s" % graphs
     content = """<html>
       <head>
         <title>Stromverbrauch</title>
@@ -104,15 +124,15 @@ class GetHandler(BaseHTTPRequestHandler):
       <body>
         <h1>Stromverbrauch</h1>
         <h2>3 Stunden</h2>
-        <img src="graph?start=10800">
+        <img src="graph?start=10800%s">
         <h2>12 Stunden</h2>
-        <img src="graph?start=43200">
+        <img src="graph?start=43200%s">
         <h2>24 Stunden</h2>
-        <img src="graph?start=86400">
+        <img src="graph?start=86400%s">
         <h2>7 Tage</h2>
-        <img src="graph?start=604800&step=300">
+        <img src="graph?start=604800&step=300%s">
       </body>
-    </html>"""
+    </html>""" % (graphsParamStr, graphsParamStr, graphsParamStr, graphsParamStr)
     self.send_header("Content-Length", len(content))
     self.send_header("Content-Type", "text/html")
 
