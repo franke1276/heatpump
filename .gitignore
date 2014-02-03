@@ -35,3 +35,14 @@ nosetests.xml
 .project
 .pydevproject
 www/graphs/*
+
+.DS_Store
+._.
+._.DS_Store
+._.TemporaryItems
+._.apdisk
+.apdisk
+.idea/
+heatpump.iml
+www/history.html
+www/history.htmle

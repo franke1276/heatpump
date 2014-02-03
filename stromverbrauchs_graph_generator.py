@@ -111,28 +111,75 @@ class GetHandler(BaseHTTPRequestHandler):
     self.send_response(404)
     self.end_headers()
 
-  def _handle_index(self, parsed_path):
+  def _handle_all(self, parsed_path):
+    self.send_response(200)
+
+    content ="""<html>
+    <head>
+      <title>Stromverbrauch</title>
+    </head>
+    <body>
+      <h1>Stromverbrauch</h1>
+      <a href="detail">detail</a>
+      <h2>3 Stunden</h2>
+      <img src="graph?start=10800">
+      <h2>12 Stunden</h2>
+      <img src="graph?start=43200">
+      <h2>24 Stunden</h2>
+      <img src="graph?start=86400">
+      <h2>7 Tage</h2>
+      <img src="graph?start=604800&step=300">
+    </body>
+</html>"""
+    self.send_header("Content-Length", len(content))
+    self.send_header("Content-Type", "text/html")
+
+    self.end_headers()
+    self.wfile.write(content)
+
+  def _handle_detail(self, parsed_path):
     params = parse_qs(parsed_path.query)
     self.send_response(200)
     graphs = getStringOrElse(params,"graphs", getAllZaehlerNames())
 
     graphsParamStr = "&graphs=%s" % graphs
-    content = """<html>
-      <head>
-        <title>Stromverbrauch</title>
+    content = """
+    <html>
+  <head>
+    <title>Stromverbrauch</title>
+      <script src="http://code.jquery.com/jquery-2.1.0.min.js" ></script>
+
+      <script type="text/javascript">
+$( document ).ready(function() {
+    $("#gobutton").click(function(){
+      console.log("click")
+      var bild = $("#bild")
+      var start = $("#start").val()
+      bild.attr("src", "graph?start=" + (start * 3600))
+      bild.fadeIn();
+
+      $("#stundenlabel").html(start + " Stunden")
+    });
+});
+
+
+    </script>
       </head>
       <body>
         <h1>Stromverbrauch</h1>
-        <h2>3 Stunden</h2>
-        <img src="graph?start=10800%s">
-        <h2>12 Stunden</h2>
-        <img src="graph?start=43200%s">
-        <h2>24 Stunden</h2>
-        <img src="graph?start=86400%s">
-        <h2>7 Tage</h2>
-        <img src="graph?start=604800&step=300%s">
+        <a href="/">Alle</a>
+
+        <div>
+          Startzeitpunkt (in h): <input type="text" id="start" value="24" size="3"> bis jetzt
+
+          <input type="button" id="gobutton" value="&auml;ndern">
+        </div>
+        <h2 id="stundenlabel">24 Stunden</h2>
+        <div id="imageContainter"></div>
+        <img id="bild" src="graph?start=86400">
       </body>
-    </html>""" % (graphsParamStr, graphsParamStr, graphsParamStr, graphsParamStr)
+    </html>
+    """ #% (graphsParamStr, graphsParamStr, graphsParamStr, graphsParamStr)
     self.send_header("Content-Length", len(content))
     self.send_header("Content-Type", "text/html")
 
@@ -156,7 +203,9 @@ class GetHandler(BaseHTTPRequestHandler):
     parsed_path = urlparse.urlparse(self.path)
 
     if parsed_path.path == "/":
-      self._handle_index(parsed_path)
+      self._handle_all(parsed_path)
+    elif parsed_path.path == "/detail":
+      self._handle_detail(parsed_path)
     elif parsed_path.path == "/graph":
       self._handle_graph(parsed_path)
     else:

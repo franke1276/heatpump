@@ -81,7 +81,6 @@ def renderCharts(myRRD, startTime):
 
 
   from pyrrd.graph import Graph
-  graphfile = "/home/pi/heatpump/www/graphs/rrdgraph.png"
   currentTime = int(time.time())
 
   g = Graph('Dummy.png', start=currentTime - 60 * 60 * 24 , end=currentTime, vertical_label='KWh/min', color=ca)
