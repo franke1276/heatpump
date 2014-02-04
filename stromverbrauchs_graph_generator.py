@@ -2,16 +2,48 @@
 # -*- coding: utf-8 -*-
 from string import join
 
-rrd_file = "/var/lib/stromverbrauch/strom.rrd"
+rrd_file = "/var/lib/heatpumpMonitor/heatpumpMonitor.rrd"
 
-zaehler = {
-  "zaehlerstandWP" : {
+werte = {
+  "zaehlerstand_wp" : {
     "color" : "#ff1100",
     "legend" : "Zaehlerstand Waermepumpe"
   },
-  "zaehlerstandSZ" : {
+  "zaehlerstand_sz" : {
     "color" : "#ff9900",
     "legend" : "Zaehlerstand Stromzaehler"
+  },
+  "flow_temp": {
+    "color" : "#ffAA00",
+    "legend" : "Vorlauftemperatur"
+  },
+  "return_temp": {
+    "color" : "#CC1100",
+    "legend" : "Ruecklauftemperatur"
+  },
+  "dhw_temp": {
+    "color" : "#CC9900",
+    "legend" : "Warmwassertemeratur"
+  },
+  "outside_temp": {
+    "color" : "#CCAA00",
+    "legend" : "Aussentemperatur"
+  },
+  "collector_temp": {
+    "color" : "#991100",
+    "legend" : "Kollektortemperatur"
+  },
+  "heizung": {
+    "color" : "#999900",
+    "legend" : "Heizstufe"
+  },
+  "evaporator_temp": {
+    "color" : "#99AA00",
+    "legend" : "Evaporatortemperatur"
+  },
+  "condenser_temp": {
+    "color" : "#661100",
+    "legend" : "Kondensatortemperatur"
   }
 }
 
@@ -56,7 +88,7 @@ def getBooleanOrElse(params, key, default):
 
 def getAllZaehlerNames():
   z = []
-  for zaehlerName, zaehlerData in zaehler.items():
+  for zaehlerName, zaehlerData in werte.items():
     z.append(zaehlerName)
   return join(z, ",")
 
@@ -65,7 +97,7 @@ class GetHandler(BaseHTTPRequestHandler):
 
   def _createLines(self, graphs):
     lines = []
-    for zaehlerName, zaehlerData in zaehler.items():
+    for zaehlerName, zaehlerData in werte.items():
       for g in graphs.split(","):
         if zaehlerName == g:
           d = DEF(rrdfile=rrd_file, vname=zaehlerName, dsName=zaehlerName)
@@ -143,6 +175,11 @@ class GetHandler(BaseHTTPRequestHandler):
     graphs = getStringOrElse(params,"graphs", getAllZaehlerNames())
 
     graphsParamStr = "&graphs=%s" % graphs
+
+    checkBoxen = "<ul>"
+    for zaehlerName, zaehlerData in werte.items():
+      checkBoxen += """<li><input type="checkbox" class="wert" value="%s" checked="checked"> %s \n""" % (zaehlerName, zaehlerData["legend"])
+    checkBoxen += "</ul>"
     content = """
     <html>
   <head>
@@ -155,7 +192,15 @@ $( document ).ready(function() {
       console.log("click")
       var bild = $("#bild")
       var start = $("#start").val()
-      bild.attr("src", "graph?start=" + (start * 3600))
+      var end = $("#end").val()
+      var values = []
+      $(".wert").each(function(i){
+        if ($(this).is(':checked')) {
+          values.push($(this).attr("value"))
+        }
+      });
+
+      bild.attr("src", "graph?start=" + (start * 3600) + "&end=" + (end * 3600) + "&graphs=" + values.join(","));
       bild.fadeIn();
 
       $("#stundenlabel").html(start + " Stunden")
@@ -170,8 +215,8 @@ $( document ).ready(function() {
         <a href="/">Alle</a>
 
         <div>
-          Startzeitpunkt (in h): <input type="text" id="start" value="24" size="3"> bis jetzt
-
+          Zeit (in h): <input type="text" id="start" value="24" size="3"> bis <input type="text" id="end" value="0" size="3"> (0 = jetzt)
+          %s
           <input type="button" id="gobutton" value="&auml;ndern">
         </div>
         <h2 id="stundenlabel">24 Stunden</h2>
@@ -179,7 +224,7 @@ $( document ).ready(function() {
         <img id="bild" src="graph?start=86400">
       </body>
     </html>
-    """ #% (graphsParamStr, graphsParamStr, graphsParamStr, graphsParamStr)
+    """ % (checkBoxen)
     self.send_header("Content-Length", len(content))
     self.send_header("Content-Type", "text/html")
 
