@@ -55,7 +55,7 @@ def logError(e):
     errorlog.logError(e)
 
 def updateCCU(v):
-  ccuUrl = "http://192.168.178.31:8080/api/set"
+  ccuUrl = "http://pi:8080/api/set"
   try:
     requests.get(ccuUrl + "/AussenTemp/?value=" + str(v.get('outside_temp')))
     requests.get(ccuUrl + "/KollectorTemp/?value=" + str(v.get('collector_temp')))

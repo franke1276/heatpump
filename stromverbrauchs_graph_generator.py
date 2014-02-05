@@ -127,6 +127,9 @@ class GetHandler(BaseHTTPRequestHandler):
     height = getIntOrElse(params, "height", 400)
     graphs = getStringOrElse(params, "graphs", getAllZaehlerNames())
 
+    upperlimit = getIntOrElse(params, "upperlimit", None)
+    lowerlimit = getIntOrElse(params, "lowerlimit", None)
+
     generated_file = "/tmp/%d-%d.png" % (time.time(),random.randint(0, 100000))
 
     g = Graph(generated_file, start=start, end=end, vertical_label='100mWh/min', color=ca)
@@ -135,6 +138,13 @@ class GetHandler(BaseHTTPRequestHandler):
     g.height = height
     g.step = step
     g.logarithmic = log
+
+    if upperlimit:
+      g.upper_limit=upperlimit
+    if lowerlimit:
+      g.lower_limit=lowerlimit
+
+    g.rigid=True
     g.write()
 
     return generated_file
@@ -179,6 +189,9 @@ class GetHandler(BaseHTTPRequestHandler):
     checkBoxen = "<ul>"
     for zaehlerName, zaehlerData in werte.items():
       checkBoxen += """<li><input type="checkbox" class="wert" value="%s" checked="checked"> %s \n""" % (zaehlerName, zaehlerData["legend"])
+
+    checkBoxen += """<li><a href="javascript:alle();">alle</a>\n"""
+    checkBoxen += """<li><a href="javascript:keine();">keine</a>\n"""
     checkBoxen += "</ul>"
     content = """
     <html>
@@ -187,12 +200,25 @@ class GetHandler(BaseHTTPRequestHandler):
       <script src="http://code.jquery.com/jquery-2.1.0.min.js" ></script>
 
       <script type="text/javascript">
+      function alle() {
+        $(".wert").each(function(i){
+          $(this).prop('checked', true)
+        });
+      }
+      function keine() {
+        $(".wert").each(function(i){
+          $(this).prop('checked', false)
+        });
+      }
+
 $( document ).ready(function() {
     $("#gobutton").click(function(){
       console.log("click")
       var bild = $("#bild")
       var start = $("#start").val()
       var end = $("#end").val()
+      var lowerlimit = $("#lowerlimit").val()
+      var upperlimit = $("#upperlimit").val()
       var values = []
       $(".wert").each(function(i){
         if ($(this).is(':checked')) {
@@ -200,7 +226,7 @@ $( document ).ready(function() {
         }
       });
 
-      bild.attr("src", "graph?start=" + (start * 3600) + "&end=" + (end * 3600) + "&graphs=" + values.join(","));
+      bild.attr("src", "graph?start=" + (start * 3600) + "&end=" + (end * 3600) + "&graphs=" + values.join(",") + "&lowerlimit=" + lowerlimit + "&upperlimit=" + upperlimit);
       bild.fadeIn();
 
       $("#stundenlabel").html(start + " Stunden")
@@ -212,11 +238,13 @@ $( document ).ready(function() {
       </head>
       <body>
         <h1>Stromverbrauch</h1>
-        <a href="/">Alle</a>
+        <a href="/">Uebersicht</a>
 
         <div>
           Zeit (in h): <input type="text" id="start" value="24" size="3"> bis <input type="text" id="end" value="0" size="3"> (0 = jetzt)
           %s
+          <p>Upper limit: <input type="text" id="upperlimit" value="" size="3"></p>
+          <p>Lower limit: <input type="text" id="lowerlimit" value="" size="3"></p>
           <input type="button" id="gobutton" value="&auml;ndern">
         </div>
         <h2 id="stundenlabel">24 Stunden</h2>
