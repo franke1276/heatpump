@@ -7,43 +7,53 @@ rrd_file = "/var/lib/heatpumpMonitor/heatpumpMonitor.rrd"
 werte = {
   "zaehlerstand_wp" : {
     "color" : "#ff1100",
-    "legend" : "Zaehlerstand Waermepumpe"
+    "legend" : "Zaehlerstand Waermepumpe",
+    "default" : True
   },
   "zaehlerstand_sz" : {
     "color" : "#ff9900",
-    "legend" : "Zaehlerstand Stromzaehler"
+    "legend" : "Zaehlerstand Stromzaehler",
+    "default" : True
   },
   "flow_temp": {
     "color" : "#ffAA00",
-    "legend" : "Vorlauftemperatur"
+    "legend" : "Vorlauftemperatur",
+    "default" : True
   },
   "return_temp": {
     "color" : "#CC1100",
-    "legend" : "Ruecklauftemperatur"
+    "legend" : "Ruecklauftemperatur",
+    "default" : True
   },
   "dhw_temp": {
     "color" : "#CC9900",
-    "legend" : "Warmwassertemeratur"
+    "legend" : "Warmwassertemeratur",
+    "default" : True
   },
   "outside_temp": {
     "color" : "#CCAA00",
-    "legend" : "Aussentemperatur"
+    "legend" : "Aussentemperatur",
+    "default" : True
   },
   "collector_temp": {
     "color" : "#991100",
-    "legend" : "Kollektortemperatur"
+    "legend" : "Kollektortemperatur",
+    "default" : True
   },
   "heizung": {
     "color" : "#999900",
-    "legend" : "Heizstufe"
+    "legend" : "Heizstufe",
+    "default" : False
   },
   "evaporator_temp": {
     "color" : "#99AA00",
-    "legend" : "Evaporatortemperatur"
+    "legend" : "Evaporatortemperatur",
+    "default" : False
   },
   "condenser_temp": {
     "color" : "#661100",
-    "legend" : "Kondensatortemperatur"
+    "legend" : "Kondensatortemperatur",
+    "default" : False
   }
 }
 
@@ -188,7 +198,10 @@ class GetHandler(BaseHTTPRequestHandler):
 
     checkBoxen = "<ul>"
     for zaehlerName, zaehlerData in werte.items():
-      checkBoxen += """<li><input type="checkbox" class="wert" value="%s" checked="checked"> %s \n""" % (zaehlerName, zaehlerData["legend"])
+      checked = ""
+      if zaehlerData["default"]:
+        checked="""checked="checked" """
+      checkBoxen += """<li><input type="checkbox" class="wert" value="%s" %s> %s \n""" % (zaehlerName, checked, zaehlerData["legend"])
 
     checkBoxen += """<li><a href="javascript:alle();">alle</a>\n"""
     checkBoxen += """<li><a href="javascript:keine();">keine</a>\n"""
@@ -211,26 +224,30 @@ class GetHandler(BaseHTTPRequestHandler):
         });
       }
 
+      function update() {
+        var bild = $("#bild");
+        var start = $("#start").val();
+        var end = $("#end").val();
+        var lowerlimit = $("#lowerlimit").val();
+        var upperlimit = $("#upperlimit").val();
+        var values = [];
+        $(".wert").each(function(i){
+          if ($(this).is(':checked')) {
+            values.push($(this).attr("value"));
+          }
+        });
+
+        bild.attr("src", "graph?start=" + (start * 3600) + "&end=" + (end * 3600) + "&graphs=" + values.join(",") + "&lowerlimit=" + lowerlimit + "&upperlimit=" + upperlimit);
+        bild.fadeIn();
+
+        $("#stundenlabel").html(start + " Stunden")
+      }
+
 $( document ).ready(function() {
     $("#gobutton").click(function(){
-      console.log("click")
-      var bild = $("#bild")
-      var start = $("#start").val()
-      var end = $("#end").val()
-      var lowerlimit = $("#lowerlimit").val()
-      var upperlimit = $("#upperlimit").val()
-      var values = []
-      $(".wert").each(function(i){
-        if ($(this).is(':checked')) {
-          values.push($(this).attr("value"))
-        }
-      });
-
-      bild.attr("src", "graph?start=" + (start * 3600) + "&end=" + (end * 3600) + "&graphs=" + values.join(",") + "&lowerlimit=" + lowerlimit + "&upperlimit=" + upperlimit);
-      bild.fadeIn();
-
-      $("#stundenlabel").html(start + " Stunden")
+      update();
     });
+    update();
 });
 
 
@@ -241,15 +258,15 @@ $( document ).ready(function() {
         <a href="/">Uebersicht</a>
 
         <div>
-          Zeit (in h): <input type="text" id="start" value="24" size="3"> bis <input type="text" id="end" value="0" size="3"> (0 = jetzt)
+          Zeit (in h): <input type="text" id="start" value="6" size="3"> bis <input type="text" id="end" value="0" size="3"> (0 = jetzt)
           %s
-          <p>Upper limit: <input type="text" id="upperlimit" value="" size="3"></p>
+          <p>Upper limit: <input type="text" id="upperlimit" value="100" size="3"></p>
           <p>Lower limit: <input type="text" id="lowerlimit" value="" size="3"></p>
           <input type="button" id="gobutton" value="&auml;ndern">
         </div>
         <h2 id="stundenlabel">24 Stunden</h2>
         <div id="imageContainter"></div>
-        <img id="bild" src="graph?start=86400">
+        <img id="bild" src="">
       </body>
     </html>
     """ % (checkBoxen)
