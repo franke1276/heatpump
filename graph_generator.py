@@ -263,6 +263,7 @@ $( document ).ready(function() {
     $(".inputfield").change(function(){
       update();
     });
+    window.setInterval(update, 60000);
     update();
 });
 

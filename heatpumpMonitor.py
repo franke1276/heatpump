@@ -100,6 +100,8 @@ def doMonitor():
                 zs_sz = sz_sz.getValueAsInt()
                 v_wp = zs_wp - old_wp
                 v_sz = zs_sz - old_sz
+                old_wp = zs_wp
+                old_sz = zs_sz
                 print "%d %d %d %d " % (zs_wp, zs_sz, v_wp, v_sz)
                 sys.stdout.flush()
                 saveVerbrauchsData(v_wp, v_sz, zs_wp, zs_sz, 60)
