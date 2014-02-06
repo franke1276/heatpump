@@ -62,6 +62,15 @@ def updateCCU(v):
   except Exception,e:
     logError(e)
 
+def saveVerbrauchsData(v_wp,v_sz,zs_wp,zs_sz,interval):
+  y = time.strftime('%Y', time.localtime())
+  m = time.strftime('%m', time.localtime())
+  d = time.strftime('%d', time.localtime())
+  f = open("/var/lib/stromverbrauch/verbrauch.%s-%s-%s" %(y,m,d) , 'a')
+  f.write("%s %04d %04d %d %d %d\n" % (time.strftime('%Y %m %d %a %H %H:%M:%S', time.localtime()), v_wp, v_sz, zs_wp,      zs_sz, interval))
+  f.close
+
+
 def doMonitor():
     try:
         print "Starting ..."
@@ -85,10 +94,16 @@ def doMonitor():
         while 1:
             startTime = time.time()
             try:
+                zs_wp = sz_wp.getValueAsInt()
+                zs_sz = sz_sz.getValueAsInt()
+                v_wp = zs_wp - old_wp
+                v_sz = zs_sz - old_sz
+                saveVerbrauchsData(v_wp, v_sz, zs_wp, zs_sz, 60)
+
                 values = p.query()
-                values["zaehlerstand_wp"] = sz_wp.getValueAsInt() - old_wp
-                values["zaehlerstand_sz"] = sz_sz.getValueAsInt() - old_sz
-                print "%d: %d %d" % (startTime, values["zaehlerstand_wp"], values["zaehlerstand_sz"])
+
+                values["zaehlerstand_wp"] = v_wp
+                values["zaehlerstand_sz"] = v_sz
             except Exception, e:
                 # log the error and just try it again in 120 sec - sometimes the heatpump returns an error and works
                 # seconds later again

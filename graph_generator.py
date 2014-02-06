@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from string import join
+import deamon
 
 rrd_file = "/var/lib/heatpumpMonitor/heatpumpMonitor.rrd"
 
 werte = {
   "zaehlerstand_wp" : {
     "color" : "#ff1100",
-    "legend" : "Zaehlerstand Waermepumpe",
+    "legend" : "Verbrauch Waermepumpe",
     "default" : True
   },
   "zaehlerstand_sz" : {
     "color" : "#ff9900",
-    "legend" : "Zaehlerstand Stromzaehler",
+    "legend" : "Verbrauch Stromzaehler",
     "default" : True
   },
   "flow_temp": {
@@ -131,7 +132,7 @@ class GetHandler(BaseHTTPRequestHandler):
 
     start = currentTime - getIntOrElse(params, "start", (3 * hour))
     end = currentTime - getIntOrElse(params, "end", 0)
-    log = getBooleanOrElse(params, "log", False)
+    logarithmic = getBooleanOrElse(params, "logarithmic", False)
     step = getIntOrElse(params, "step", 60)
     width = getIntOrElse(params, "width", 800)
     height = getIntOrElse(params, "height", 400)
@@ -147,7 +148,7 @@ class GetHandler(BaseHTTPRequestHandler):
     g.width = width
     g.height = height
     g.step = step
-    g.logarithmic = log
+    g.logarithmic = logarithmic
 
     if upperlimit:
       g.upper_limit=upperlimit
@@ -230,6 +231,10 @@ class GetHandler(BaseHTTPRequestHandler):
         var end = $("#end").val();
         var lowerlimit = $("#lowerlimit").val();
         var upperlimit = $("#upperlimit").val();
+        var logarithmic = false;
+          if ($("#logarithmic").is(':checked')) {
+            logarithmic = true
+          }
         var values = [];
         $(".wert").each(function(i){
           if ($(this).is(':checked')) {
@@ -237,7 +242,7 @@ class GetHandler(BaseHTTPRequestHandler):
           }
         });
 
-        bild.attr("src", "graph?start=" + (start * 3600) + "&end=" + (end * 3600) + "&graphs=" + values.join(",") + "&lowerlimit=" + lowerlimit + "&upperlimit=" + upperlimit);
+        bild.attr("src", "graph?start=" + (start * 3600) + "&end=" + (end * 3600) + "&graphs=" + values.join(",") + "&lowerlimit=" + lowerlimit + "&upperlimit=" + upperlimit + "&logarithmic=" + logarithmic);
         bild.fadeIn();
 
         $("#stundenlabel").html(start + " Stunden")
@@ -262,6 +267,7 @@ $( document ).ready(function() {
           %s
           <p>Upper limit: <input type="text" id="upperlimit" value="100" size="3"></p>
           <p>Lower limit: <input type="text" id="lowerlimit" value="" size="3"></p>
+          <p>logarithmische Skala: <input type="checkbox" id="logarithmic"></p>
           <input type="button" id="gobutton" value="&auml;ndern">
         </div>
         <h2 id="stundenlabel">24 Stunden</h2>
@@ -300,16 +306,16 @@ $( document ).ready(function() {
       self._handle_graph(parsed_path)
     else:
       self._handle_other(parsed_path)
-
+    sys.stdout.flush()
     return
 
 def main():
+  deamon.startstop("/var/log/stromverbrauch/graph_generator.log", pidfile="/var/run/stromverbrauch/graph_generator.pid")
   port = 9000
-  if len(sys.argv) > 1:
-    port = int(sys.argv[1])
   from BaseHTTPServer import HTTPServer
   server = HTTPServer(('0.0.0.0', port), GetHandler)
-  print "Starting server on port %d, use <Ctrl-C> to stop" % port
+  print "Starting server on port %d" % port
+  sys.stdout.flush()
   server.serve_forever()
 
 if __name__ == '__main__':
