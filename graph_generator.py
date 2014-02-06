@@ -12,32 +12,32 @@ werte = {
     "default" : True
   },
   "zaehlerstand_sz" : {
-    "color" : "#ff9900",
+    "color" : "#BBad4f",
     "legend" : "Verbrauch Stromzaehler",
     "default" : True
   },
   "flow_temp": {
-    "color" : "#ffAA00",
+    "color" : "#CC99DD",
     "legend" : "Vorlauftemperatur",
     "default" : True
   },
   "return_temp": {
-    "color" : "#CC1100",
+    "color" : "#CC11FF",
     "legend" : "Ruecklauftemperatur",
     "default" : True
   },
   "dhw_temp": {
-    "color" : "#CC9900",
+    "color" : "#F511CB",
     "legend" : "Warmwassertemeratur",
     "default" : True
   },
   "outside_temp": {
-    "color" : "#CCAA00",
+    "color" : "#F56C11",
     "legend" : "Aussentemperatur",
     "default" : True
   },
   "collector_temp": {
-    "color" : "#991100",
+    "color" : "#F5AD11",
     "legend" : "Kollektortemperatur",
     "default" : True
   },
@@ -167,9 +167,11 @@ class GetHandler(BaseHTTPRequestHandler):
   def _handle_all(self, parsed_path):
     self.send_response(200)
 
-    content ="""<html>
+    content ="""<!DOCTYPE html>
+    <html lang="en">
     <head>
       <title>Stromverbrauch</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
       <h1>Stromverbrauch</h1>
@@ -197,32 +199,41 @@ class GetHandler(BaseHTTPRequestHandler):
 
     graphsParamStr = "&graphs=%s" % graphs
 
-    checkBoxen = "<ul>"
+
+
+
+    checkBoxen = ""
     for zaehlerName, zaehlerData in werte.items():
       checked = ""
       if zaehlerData["default"]:
         checked="""checked="checked" """
-      checkBoxen += """<li><input type="checkbox" class="wert" value="%s" %s> %s \n""" % (zaehlerName, checked, zaehlerData["legend"])
+      checkBoxen += """<div class="checkbox"><label><input type="checkbox" class="wert inputfield" value="%s" %s>%s</label></div>\n""" % (zaehlerName, checked, zaehlerData["legend"])
+      #<input type="checkbox" class="wert inputfield" value="%s" %s> %s \n
 
-    checkBoxen += """<li><a href="javascript:alle();">alle</a>\n"""
-    checkBoxen += """<li><a href="javascript:keine();">keine</a>\n"""
-    checkBoxen += "</ul>"
+    checkBoxen += """<a href="javascript:alle();">alle</a> <a href="javascript:keine();">keine</a>\n"""
     content = """
-    <html>
+    <!DOCTYPE html>
+    <html lang="en">
   <head>
-    <title>Stromverbrauch</title>
+      <title>Messwerte</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
       <script src="http://code.jquery.com/jquery-2.1.0.min.js" ></script>
+      <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js" ></script>
+      <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+
 
       <script type="text/javascript">
       function alle() {
         $(".wert").each(function(i){
           $(this).prop('checked', true)
         });
+        update();
       }
       function keine() {
         $(".wert").each(function(i){
           $(this).prop('checked', false)
         });
+        update();
       }
 
       function update() {
@@ -249,7 +260,7 @@ class GetHandler(BaseHTTPRequestHandler):
       }
 
 $( document ).ready(function() {
-    $("#gobutton").click(function(){
+    $(".inputfield").change(function(){
       update();
     });
     update();
@@ -259,20 +270,37 @@ $( document ).ready(function() {
     </script>
       </head>
       <body>
-        <h1>Stromverbrauch</h1>
-        <a href="/">Uebersicht</a>
+        <div class="container">
+          <div class="row">
+            <div class="col-md-3">
+              <h3>Parameter</h3>
+              <h4>Zeiten</h4>
+              <label class="sr-only" for="start">Start</label>
+              <input type="text" class="form-control inputfield" id="start" placeholder="Start in h" size="3" value="4">
 
-        <div>
-          Zeit (in h): <input type="text" id="start" value="6" size="3"> bis <input type="text" id="end" value="0" size="3"> (0 = jetzt)
-          %s
-          <p>Upper limit: <input type="text" id="upperlimit" value="100" size="3"></p>
-          <p>Lower limit: <input type="text" id="lowerlimit" value="" size="3"></p>
-          <p>logarithmische Skala: <input type="checkbox" id="logarithmic"></p>
-          <input type="button" id="gobutton" value="&auml;ndern">
+              <label class="sr-only" for="end">Ende</label>
+              <input type="text" class="form-control inputfield" id="end" placeholder="Ende in h" size="3">
+
+              <h4>Werte</h4>
+              %s
+
+              <h4>Limits</h4>
+              <label class="sr-only" for="upperlimit">Upper limit</label>
+              <input type="text" class="form-control inputfield" id="upperlimit" placeholder="Upper limit" size="3">
+
+              <label class="sr-only" for="lowerlimit">Lower limit</label>
+              <input type="text" class="form-control inputfield" id="lowerlimit" placeholder="Lower limit" size="3">
+
+              <h4>Sonstiges</h4>
+              <div class="checkbox"><label><input type="checkbox" class="inputfield" id="logarithmic">logarithmische Skala</label></div>
+            </div>
+            <div class="col-md-6">
+              <h3 id="stundenlabel">24 Stunden</h3>
+              <div id="imageContainter"></div>
+              <img id="bild" src="">
+            </div>
+          </div>
         </div>
-        <h2 id="stundenlabel">24 Stunden</h2>
-        <div id="imageContainter"></div>
-        <img id="bild" src="">
       </body>
     </html>
     """ % (checkBoxen)
