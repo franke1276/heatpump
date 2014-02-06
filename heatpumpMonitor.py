@@ -90,6 +90,8 @@ def doMonitor():
         sz_sz = stromzaehler.StromZaehler("/dev/lesekopfSZ")
         old_wp = sz_wp.getValueAsInt()
         old_sz = sz_sz.getValueAsInt()
+        print "%d %d" % (old_wp, old_sz)
+        sys.stdout.flush()
         time.sleep(60)
         while 1:
             startTime = time.time()
@@ -98,6 +100,8 @@ def doMonitor():
                 zs_sz = sz_sz.getValueAsInt()
                 v_wp = zs_wp - old_wp
                 v_sz = zs_sz - old_sz
+                print "%d %d %d %d " % (zs_wp, zs_sz, v_wp, v_sz)
+                sys.stdout.flush()
                 saveVerbrauchsData(v_wp, v_sz, zs_wp, zs_sz, 60)
 
                 values = p.query()
