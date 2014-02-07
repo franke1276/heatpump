@@ -13,7 +13,7 @@
 """
     This module is responsible for storing the data from the heat pump in a
     round robin database (rrd).
-    
+
     Written by Robert Penz <robert@penz.name>
 """
 
@@ -25,26 +25,26 @@ step = 60
 
 # rrd allows only up to 19 chars
 dataSources = ( #1234567890123456789
-                "flow_temp", 
-                "return_temp", 
-                "hot_gas_temp", 
-                "dhw_temp", 
-                "flow_temp_hc2", 
-                "inside_temp", 
-                "evaporator_temp", 
-                "condenser_temp", 
-                "extr_speed_set", 
-                "vent_speed_set", 
-                "expel_speed_set", 
-                "extr_speed_actual", 
-                "vent_speed_actual", 
-                "expel_speed_actual", 
-                "outside_temp", 
-                "compressor_heating", 
-                "compressor_dhw", 
-                "booster_dhw", 
-                "booster_heating", 
-                "collector_temp", 
+                "flow_temp",
+                "return_temp",
+                "hot_gas_temp",
+                "dhw_temp",
+                "flow_temp_hc2",
+                "inside_temp",
+                "evaporator_temp",
+                "condenser_temp",
+                "extr_speed_set",
+                "vent_speed_set",
+                "expel_speed_set",
+                "extr_speed_actual",
+                "vent_speed_actual",
+                "expel_speed_actual",
+                "outside_temp",
+                "compressor_heating",
+                "compressor_dhw",
+                "booster_dhw",
+                "booster_heating",
+                "collector_temp",
                 "dew_point_temp",
                 "zaehlerstand_wp",
                 "zaehlerstand_sz",
@@ -68,15 +68,12 @@ class Storage:
         # Let's setup some data sources for our RRD
         dss = []
         for source in dataSources:
-            if source.startswith("zaehlerstand"):
-              dss.append(DS(dsName=source, dsType='COUNTER', heartbeat=900))
-            else:  
-              dss.append(DS(dsName=source, dsType='GAUGE', heartbeat=900))
+          dss.append(DS(dsName=source, dsType='GAUGE', heartbeat=900))
 
         # An now let's setup how our RRD will archive the data
         rras = []
         # 1 days-worth of one-minute samples --> 60/1 * 24
-        rra1 = RRA(cf='AVERAGE', xff=0, steps=1, rows=1440) 
+        rra1 = RRA(cf='AVERAGE', xff=0, steps=1, rows=1440)
         # 7 days-worth of five-minute samples --> 60/5 * 24 * 7
         rra2 = RRA(cf='AVERAGE', xff=0, steps=5, rows=2016)
         # 30 days-worth of one hour samples --> 60/60 * 24 * 30
@@ -112,6 +109,6 @@ def main():
     aS.add(tmp)
     print aS._rrd.info()
 
-    
+
 if __name__ == '__main__':
     main()
