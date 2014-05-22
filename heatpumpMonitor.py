@@ -66,7 +66,7 @@ def saveVerbrauchsData(v_wp,v_sz,zs_wp,zs_sz,interval):
   y = time.strftime('%Y', time.localtime())
   m = time.strftime('%m', time.localtime())
   d = time.strftime('%d', time.localtime())
-  f = open("/var/lib/stromverbrauch/verbrauch.%s-%s-%s" %(y,m,d) , 'a')
+  f = open("/var/lib/heatpumpMonitor/verbrauch.%s-%s-%s" %(y,m,d) , 'a')
   f.write("%s %04d %04d %d %d %d\n" % (time.strftime('%Y %m %d %a %H %H:%M:%S', time.localtime()), v_wp, v_sz, zs_wp,      zs_sz, interval))
   f.close
 

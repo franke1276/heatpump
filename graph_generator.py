@@ -339,7 +339,7 @@ $( document ).ready(function() {
     return
 
 def main():
-  deamon.startstop("/var/log/stromverbrauch/graph_generator.log", pidfile="/var/run/stromverbrauch/graph_generator.pid")
+  deamon.startstop("/var/log/stromverbrauch/graph_generator.log", pidfile="/var/run/graph_generator.pid")
   port = 9000
   from BaseHTTPServer import HTTPServer
   server = HTTPServer(('0.0.0.0', port), GetHandler)
