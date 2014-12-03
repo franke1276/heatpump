@@ -27,8 +27,8 @@
         </style>
     </head>
     <body>
-        <h1>Wärmepumpenzähler</h1>
-        <a href="index-sz.html">Stromzähler</a>
+        <h1>Stromzähler</h1>
+        <a href="index.html">Wärmepumpenzähler</a>
         <svg class="chart"></svg>
         <script type="text/javascript" charset="utf-8">
         var margin = {top: 20, right: 20, bottom: 30, left: 40},
@@ -62,7 +62,7 @@
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         var csv = d3.dsv(";", "text/plain");
-        csv("/cgi-bin/verbrauch.sh", function(d){
+        csv("/cgi-bin/verbrauch-sz.sh", function(d){
         return {
                         monat: +d.monat,
                         "2013": +d["2013"],

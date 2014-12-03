@@ -39,7 +39,7 @@ import thresholdMonitor
 import requests
 import stromzaehler
 import errorlog
-
+#from kafka import KafkaClient, SimpleProducer, SimpleConsumer, RoundRobinPartitioner
 
 config = None
 
@@ -69,12 +69,23 @@ def saveVerbrauchsData(v_wp,v_sz,zs_wp,zs_sz,interval):
   f = open("/var/lib/heatpumpMonitor/verbrauch.%s-%s-%s" %(y,m,d) , 'a')
   f.write("%s %04d %04d %d %d %d\n" % (time.strftime('%Y %m %d %a %H %H:%M:%S', time.localtime()), v_wp, v_sz, zs_wp,      zs_sz, interval))
   f.close
+  #try:
+  #  kafka = KafkaClient("192.168.178.95:9092")
+  #  producer = SimpleProducer(kafka, async=False, req_acks=SimpleProducer.ACK_AFTER_LOCAL_WRITE, ack_timeout=2000)
+  #  producer.send_messages("verbrauch2", "%s wp %d" % (time.strftime('%Y %m %d %a %H %H:%M:%S', time.localtime()), v_wp))
+  #  producer.send_messages("verbrauch2", "%s sz %d" % (time.strftime('%Y %m %d %a %H %H:%M:%S', time.localtime()), v_sz))
+  #  kafka.close()
+  #except Exception, e:
+  #  logError(e)
+
+
 
 
 def doMonitor():
     try:
         print "Starting ..."
         sys.stdout.flush()
+
 
         p = protocol.Protocol(config.getSerialDevice(), config.getProtocolVersionsDirectory(), config.getNewStyleSerialCommunication())
         s = storage.Storage(config.getDatabaseFile())
